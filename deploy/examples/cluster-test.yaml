@@ -41,9 +41,18 @@ spec:
   crashCollector:
     disable: true
   storage:
-    useAllNodes: true
-    useAllDevices: true
-    #deviceFilter:
+    useAllNodes: false
+    useAllDevices: false
+    # deviceFilter:
+    # config:
+    #   databaseSizeMB: "1024"
+    nodes:
+    - name: "test-master01"
+      devices:
+      - name: "sdb"
+    - name: "test-master02"
+      devices:
+      - name: "sda"
   healthCheck:
     daemonHealth:
       mon:
