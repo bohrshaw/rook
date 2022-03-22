@@ -9,6 +9,7 @@ set -e
 # VARIABLES #
 #############
 
+: "${CEPH_INFO:=ceph-info.sh}"
 : "${CLIENT_CHECKER_NAME:=client.healthchecker}"
 : "${RGW_POOL_PREFIX:=default}"
 : "${ns:=rook-ceph-external}"
@@ -38,44 +39,49 @@ function checkEnv() {
   fi
 }
 
+function exportFile() {
+  [[ "$1" == *=* ]] || eval "local equal_value==\$$1"
+  echo "export $1$equal_value" >> $CEPH_INFO
+}
+
 function createCheckerKey() {
   ROOK_EXTERNAL_USER_SECRET=$(ceph auth get-or-create "$CLIENT_CHECKER_NAME" mon 'allow r, allow command quorum_status' mgr 'allow command config' osd 'allow rwx pool='"$RGW_POOL_PREFIX"'.rgw.meta, allow r pool=.rgw.root, allow rw pool='"$RGW_POOL_PREFIX"'.rgw.control, allow x pool='"$RGW_POOL_PREFIX"'.rgw.buckets.index, allow x pool='"$RGW_POOL_PREFIX"'.rgw.log'|awk '/key =/ { print $3}')
-  export ROOK_EXTERNAL_USER_SECRET
-  export ROOK_EXTERNAL_USERNAME=$CLIENT_CHECKER_NAME
+  exportFile ROOK_EXTERNAL_USER_SECRET
+  exportFile ROOK_EXTERNAL_USERNAME=$CLIENT_CHECKER_NAME
 }
 
 function createCephCSIKeyringRBDNode() {
   CSI_RBD_NODE_SECRET=$(ceph auth get-or-create client.csi-rbd-node mon 'profile rbd' osd 'profile rbd'|awk '/key =/ { print $3}')
-  export CSI_RBD_NODE_SECRET
+  exportFile CSI_RBD_NODE_SECRET
 }
 
 function createCephCSIKeyringRBDProvisioner() {
   CSI_RBD_PROVISIONER_SECRET=$(ceph auth get-or-create client.csi-rbd-provisioner mon 'profile rbd' mgr 'allow rw' osd 'profile rbd'|awk '/key =/ { print $3}')
-  export CSI_RBD_PROVISIONER_SECRET
+  exportFile CSI_RBD_PROVISIONER_SECRET
 }
 
 function createCephCSIKeyringCephFSNode() {
   CSI_CEPHFS_NODE_SECRET=$(ceph auth get-or-create client.csi-cephfs-node mon 'allow r' mgr 'allow rw' osd 'allow rw tag cephfs *=*' mds 'allow rw'|awk '/key =/ { print $3}')
-  export CSI_CEPHFS_NODE_SECRET
+  exportFile CSI_CEPHFS_NODE_SECRET
 }
 
 function createCephCSIKeyringCephFSProvisioner() {
   CSI_CEPHFS_PROVISIONER_SECRET=$(ceph auth get-or-create client.csi-cephfs-provisioner mon 'allow r' mgr 'allow rw' osd 'allow rw tag cephfs metadata=*'|awk '/key =/ { print $3}')
-  export CSI_CEPHFS_PROVISIONER_SECRET
+  exportFile CSI_CEPHFS_PROVISIONER_SECRET
 }
 
 function getFSID() {
   ROOK_EXTERNAL_FSID=$(ceph fsid)
-  export ROOK_EXTERNAL_FSID
+  exportFile ROOK_EXTERNAL_FSID
 }
 
 function externalMonData() {
   ROOK_EXTERNAL_CEPH_MON_DATA=$(ceph mon dump -f json 2>/dev/null|jq --raw-output .mons[0].name)=$(ceph mon dump -f json 2>/dev/null|jq --raw-output .mons[0].public_addrs.addrvec[0].addr)
-  export ROOK_EXTERNAL_CEPH_MON_DATA
+  exportFile ROOK_EXTERNAL_CEPH_MON_DATA
 }
 
 function namespace() {
-  export NAMESPACE=$ns
+  exportFile NAMESPACE=$ns
 }
 
 function createRGWAdminOpsUser() {
@@ -98,5 +104,5 @@ createCephCSIKeyringCephFSNode
 createCephCSIKeyringCephFSProvisioner
 getFSID
 externalMonData
-namespace
-createRGWAdminOpsUser
+# namespace
+# createRGWAdminOpsUser
