@@ -12,11 +12,14 @@
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
 metadata:
-  name: rook-ceph-external
-  namespace: rook-ceph-external # namespace:cluster
+  name: rook-ceph
+  namespace: rook-ceph # namespace:cluster
 spec:
   external:
     enable: true
+  # cephVersion:
+  #   image: quay.io/ceph/ceph:v16.2.7
+  # dataDirHostPath: /var/lib/rook
   crashCollector:
     disable: true
   healthCheck:
