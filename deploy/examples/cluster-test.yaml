@@ -30,6 +30,8 @@ spec:
   cephVersion:
     image: quay.io/ceph/ceph:v16.2.7
     allowUnsupported: true
+  network:
+    provider: host
   mon:
     count: 1
     allowMultiplePerNode: true
@@ -47,12 +49,9 @@ spec:
     # config:
     #   databaseSizeMB: "1024"
     nodes:
-    - name: "test-master01"
+    - name: "nl3"
       devices:
-      - name: "sdb"
-    - name: "test-master02"
-      devices:
-      - name: "sda"
+      - name: "vdb"
   healthCheck:
     daemonHealth:
       mon:
